@@ -3,7 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
 
-// ✅ Connect to database
+// ✅ Connect to Database
 connectDB();
 
 const app = express();
@@ -11,13 +11,21 @@ const app = express();
 // ✅ Middleware
 app.use(express.json());
 
-// ✅ CORS Configuration (Allow All Methods from Any Origin)
-app.use(
-  cors({
-    origin: "*", // Allow all origins
-    methods: ["GET", "POST", "PUT", "DELETE"], // Allow all necessary request types
-  })
-);
+// ✅ CORS Configuration (Allow All Origins & Methods)
+app.use(cors());
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*"); // Allow all origins
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"); // Allow all methods
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allow these headers
+  res.header("Access-Control-Allow-Credentials", "true"); // Allow credentials (if needed)
+
+  // ✅ Handle Preflight Requests
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  next();
+});
 
 // ✅ Import Models
 require("./models/User");
@@ -37,17 +45,17 @@ const notificationRoutes = require("./routes/notificationRoutes");
 const reactionRoutes = require("./routes/reactionRoutes");
 const testRoutes = require("./routes/testRoutes");
 
-// ✅ Register all routes
-app.use("/api/auth", authRoutes); // Includes register & login
+// ✅ Register Routes
+app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/news", newsRoutes);
 app.use("/api/bookmarks", bookmarkRoutes);
 app.use("/api/comments", commentRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/reactions", reactionRoutes);
-app.use("/api/test", testRoutes); // Test route
+app.use("/api/test", testRoutes);
 
-// ✅ Default route
+// ✅ Default Route
 app.get("/", (req, res) => {
   res.status(200).json({ message: "API is running..." });
 });
