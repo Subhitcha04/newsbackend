@@ -3,8 +3,11 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/db");
 
-// ✅ Connect to Database
-connectDB();
+// ✅ Connect to Database (with error handling)
+connectDB().catch((err) => {
+  console.error("Database connection failed:", err);
+  process.exit(1); // Exit if DB connection fails
+});
 
 const app = express();
 
@@ -12,22 +15,29 @@ const app = express();
 app.use(express.json());
 
 // ✅ CORS Configuration (Allow All Origins & Methods)
-app.use(cors());
+const corsOptions = {
+  origin: "*", // Allow all origins (Change if needed)
+  methods: "GET, POST, PUT, DELETE, OPTIONS",
+  allowedHeaders: "Content-Type, Authorization",
+  credentials: true, // Allow credentials if needed
+};
+app.use(cors(corsOptions));
+
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*"); // Allow all origins
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"); // Allow all methods
-  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization"); // Allow these headers
-  res.header("Access-Control-Allow-Credentials", "true"); // Allow credentials (if needed)
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Credentials", "true");
 
   // ✅ Handle Preflight Requests
   if (req.method === "OPTIONS") {
-    return res.status(200).end();
+    return res.sendStatus(204); // No Content response
   }
 
   next();
 });
 
-// ✅ Import Models
+// ✅ Import Models BEFORE Routes
 require("./models/User");
 require("./models/Bookmark");
 require("./models/Comment");
@@ -57,12 +67,12 @@ app.use("/api/test", testRoutes);
 
 // ✅ Default Route
 app.get("/", (req, res) => {
-  res.status(200).json({ message: "API is running..." });
+  res.status(200).json({ message: "🚀 API is running..." });
 });
 
 // ✅ Error Handling Middleware
 app.use((err, req, res, next) => {
-  console.error("Error:", err.message);
+  console.error("❌ Error:", err.message);
   res.status(500).json({ message: "Internal Server Error", error: err.message });
 });
 
